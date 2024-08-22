@@ -217,17 +217,17 @@ def get_dataset(
     meta_ds_kwargs=None,
 ):
     ds_list = []
+    lang_encoder = ds_kwargs.pop("lang_encoder")
     for i in range(len(ds_weights)):
-        
         ds_kwargs_copy = deepcopy(ds_kwargs)
 
         keys = ["hdf5_path", "filter_by_attribute"]
-
         for k in keys:
             ds_kwargs_copy[k] = ds_kwargs[k][i]
 
         ds_kwargs_copy["dataset_lang"] = ds_langs[i]
-        
+        ds_kwargs_copy["lang_encoder"] = lang_encoder
+
         ds_list.append(ds_class(**ds_kwargs_copy))
     
     if len(ds_weights) == 1:

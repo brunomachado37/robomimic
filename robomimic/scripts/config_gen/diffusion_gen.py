@@ -51,50 +51,36 @@ def make_generator_helper(args):
         hidename=True,
     )
 
-    if args.env == "robocasa":
-        generator.add_param(
-            key="train.data",
-            name="ds",
-            group=2,
-            values_and_names=[
-                ([{
-                    "horizon": 500,
-                    "do_eval": True,
-                    "filter_key": "1000_demos",
-                    "path": "/data1/aaronl/spark/bare/mg/2024-03-25-05-52-19/demo3_gentex_im128_randcams.hdf5"
-                }], "test"),
-                # (get_ds_cfg(["PnPCounterToSink"], src="mg", eval=None), "mg"),
-                # (get_ds_cfg("all", ds_repo="human"), "pnp-doors-human"),
-                # (get_ds_cfg("pnp_cab_to_counter", ds_repo="human", filter_key="100_demos"), "pnp-cab-to-counter-human-100"),
-                # (get_ds_cfg("pnp_cab_to_counter", ds_repo="mg", filter_key="100_demos"), "pnp-cab-to-counter-mg-100"),
-                # (get_ds_cfg("pnp_cab_to_counter", ds_repo="mg", filter_key="1000_demos"), "pnp-cab-to-counter-mg-1000"),
-                # (get_ds_cfg("pnp_cab_to_counter", ds_repo="mg", filter_key="5000_demos"), "pnp-cab-to-counter-mg-5000"),
+    ### Multi-task training on atomic tasks ###
+    EVAL_TASKS = ["CloseDrawer", "CloseSingleDoor"] # or evaluate all tasks by setting EVAL_TASKS = None
+    generator.add_param(
+        key="train.data",
+        name="ds",
+        group=123456,
+        values_and_names=[
+            (get_ds_cfg("single_stage", src="human", eval=EVAL_TASKS, filter_key="50_demos"), "human-50"), # training on human datasets
+            (get_ds_cfg("single_stage", src="mg", eval=EVAL_TASKS, filter_key="3000_demos"), "mg-3000"), # training on MimicGen datasets
+        ]
+    )
 
-                # (get_ds_cfg("all", ds_repo="mg", filter_key="1000_demos"), "4-pnp-tasks-mg-1000"),
-                # (get_ds_cfg("all", ds_repo="mg", filter_key="5000_demos"), "4-pnp-tasks-mg-5000"),
-            ]
-        )
-
-        generator.add_param(
-            key="train.action_keys",
-            name="ac_keys",
-            group=-1,
-            values=[
-                [
-                    "action_dict/abs_pos",
-                    "action_dict/abs_rot_6d",
-                    "action_dict/gripper",
-                    "action_dict/base_mode",
-                    # "actions",
-                ],
+    generator.add_param(
+        key="train.action_keys",
+        name="ac_keys",
+        group=-1,
+        values=[
+            [
+                "action_dict/abs_pos",
+                "action_dict/abs_rot_6d",
+                "action_dict/gripper",
+                "action_dict/base_mode",
+                # "actions",
             ],
-            value_names=[
-                "abs",
-            ],
-            hidename=True,
-        )
-    else:
-        raise ValueError
+        ],
+        value_names=[
+            "abs",
+        ],
+        hidename=True,
+    )
     
     generator.add_param(
         key="train.output_dir",

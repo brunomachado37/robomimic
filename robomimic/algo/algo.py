@@ -636,6 +636,8 @@ class RolloutPolicy(object):
         """
         if self.lang_encoder is not None:
             self._ep_lang_emb = TensorUtils.to_numpy(self.lang_encoder.get_lang_emb(lang))
+        else:
+            self._ep_lang_instruction = lang
         self.policy.set_eval()
         self.policy.reset()
 
@@ -662,6 +664,8 @@ class RolloutPolicy(object):
             ob = TensorUtils.to_batch(ob)
         ob = TensorUtils.to_device(ob, self.policy.device)
         ob = TensorUtils.to_float(ob)
+        if self.lang_encoder is None:
+            ob["lang_instruction"] = self._ep_lang_instruction
         return ob
 
     def __repr__(self):

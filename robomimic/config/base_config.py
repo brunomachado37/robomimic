@@ -240,6 +240,8 @@ class BaseConfig(Config):
         # the corresponding observation key groups to shuffle
         self.train.shuffled_obs_key_groups = None
 
+        self.train.language_encoder = "clip"
+
     def algo_config(self):
         """
         This function populates the `config.algo` attribute of the config, and is given to the 

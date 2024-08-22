@@ -11,11 +11,22 @@ tests/assets/test.hdf5
 # pycharm configs
 .idea/
 
+# Slurm 
+slurm/*
+logs/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
+.vscode
+
+# Evaluation results
+eval/*
+
+# Configuration files
+configs/*
 
 .DS_Store
 

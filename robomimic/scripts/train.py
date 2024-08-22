@@ -181,7 +181,8 @@ def train(config, device):
     print("")
 
     # load training data
-    lang_encoder = LangUtils.LangEncoder(
+    lang_encoder = LangUtils.language_encoder_factory(
+        model=config.train.language_encoder,
         device=device,
     )
     trainset, validset = TrainUtils.load_data_for_training(
@@ -202,6 +203,15 @@ def train(config, device):
 
     # maybe retreve statistics for normalizing actions
     action_normalization_stats = trainset.get_action_normalization_stats()
+
+    act_n_s = {key: {k: v.tolist() for k, v in action_normalization_stats[key].items()} for key in action_normalization_stats}
+
+    # save enviroment config json
+    env_config = {"env_meta_list": env_meta_list, "obs_normalization_stats": obs_normalization_stats,
+                   "action_normalization_stats": act_n_s, "shape_meta_list": shape_meta_list}
+
+    with open(os.path.join(log_dir, '..', 'env_config.json'), 'w') as outfile:
+        json.dump(env_config, outfile, indent=4)
 
     # initialize data loaders
     train_loader = DataLoader(
@@ -244,6 +254,13 @@ def train(config, device):
     # number of learning steps per epoch (defaults to a full dataset pass)
     train_num_steps = config.experiment.epoch_every_n_steps
     valid_num_steps = config.experiment.validation_epoch_every_n_steps
+
+    # Release memory used by language encoder
+    print(f"Torch CUDA memory allocated: {torch.cuda.memory_allocated()/1_000_000:.0f} Mb")
+    for i in range(len(trainset.datasets)):
+        del trainset.datasets[i].lang_encoder 
+    del lang_encoder
+    print(f"Torch CUDA memory allocated: {torch.cuda.memory_allocated()/1_000_000:.0f} Mb\n")
 
     for epoch in range(0, config.train.num_epochs + 1): # epoch numbers start at 1
         if epoch > 0:

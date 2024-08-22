@@ -102,6 +102,8 @@ class SequenceDataset(torch.utils.data.Dataset):
         """
         super(SequenceDataset, self).__init__()
 
+        self.lang_encoder = lang_encoder
+
         self.hdf5_path = os.path.expanduser(hdf5_path)
         self.hdf5_use_swmr = hdf5_use_swmr
         self.hdf5_normalize_obs = hdf5_normalize_obs
@@ -258,22 +260,17 @@ class SequenceDataset(torch.utils.data.Dataset):
                 self._index_to_demo_id[self.total_num_sequences] = ep
                 self.total_num_sequences += 1
 
-        device = TorchUtils.get_torch_device(try_to_use_cuda=True)
-        lang_encoder = LangUtils.LangEncoder(
-            device=device,
-        )
         
         if len(self._demo_id_to_demo_lang_str) > 0:
             print("getting language embeddings...")
             for ep_batch in tqdm(np.array_split(self.demos, int(math.ceil(len(self.demos) / 64)))):
                 # get language embedding
                 lang_batch = [self._demo_id_to_demo_lang_str[ep] for ep in ep_batch]
-                emb_batch = lang_encoder.get_lang_emb(lang_batch)
+                emb_batch = self.lang_encoder.get_lang_emb(lang_batch)
                 emb_batch = TensorUtils.to_numpy(emb_batch)
                 for batch_idx, ep in enumerate(ep_batch):
                     self._demo_id_to_demo_lang_emb[ep] = emb_batch[batch_idx]
 
-        del lang_encoder
 
     @property
     def hdf5_file(self):
@@ -813,22 +810,16 @@ class R2D2Dataset(SequenceDataset):
         for _ in range(num_sequences):
             self._index_to_demo_id[self.total_num_sequences] = ep
             self.total_num_sequences += 1
-
-        device = TorchUtils.get_torch_device(try_to_use_cuda=True)
-        lang_encoder = LangUtils.LangEncoder(
-            device=device,
-        )
         
         print("getting language embeddings...")
         for ep_batch in np.array_split(self.demos, int(math.ceil(len(self.demos) / 64))):
             # get language embedding
             lang_batch = [self._demo_id_to_demo_lang_str[ep] for ep in ep_batch]
-            emb_batch = lang_encoder.get_lang_emb(lang_batch)
+            emb_batch = self.lang_encoder.get_lang_emb(lang_batch)
             emb_batch = TensorUtils.to_numpy(emb_batch)
             for batch_idx, ep in enumerate(ep_batch):
                 self._demo_id_to_demo_lang_emb[ep] = emb_batch[batch_idx]
 
-        del lang_encoder
 
     def load_dataset_in_memory(self, demo_list, hdf5_file, obs_keys, dataset_keys, load_next_obs):
         """
