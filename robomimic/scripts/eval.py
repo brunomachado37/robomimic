@@ -53,7 +53,7 @@ def eval(args):
     ObsUtils.initialize_obs_utils_with_config(config)
 
     env_config = json.load(open(os.path.join(args.model_path, "env_config.json")))
-    env_config['action_normalization_stats']['actions'] = {k: np.array(v) for k, v in env_config['action_normalization_stats']['actions'].items()}
+    env_config['action_normalization_stats'] = {key: {k: np.array(v) for k, v in env_config['action_normalization_stats'][key].items()} for key in env_config['action_normalization_stats']}
     device = torch.device("cuda:0")
 
     model = algo_factory(

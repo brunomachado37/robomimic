@@ -331,6 +331,10 @@ def train(config, device):
         rollout_check = (epoch % config.experiment.rollout.rate == 0) #or (should_save_ckpt and ckpt_reason == "time") # remove this section condition, not desired when rollouts are expensive and saving frequent checkpoints
         if config.experiment.rollout.enabled and (epoch > config.experiment.rollout.warmstart) and rollout_check:
             # wrap model as a RolloutPolicy to prepare for rollouts
+            lang_encoder = LangUtils.language_encoder_factory(
+                model=config.train.language_encoder,
+                device=device,
+            )
             rollout_model = RolloutPolicy(
                 model,
                 obs_normalization_stats=obs_normalization_stats,
@@ -383,6 +387,11 @@ def train(config, device):
             should_save_ckpt = (config.experiment.save.enabled and updated_stats["should_save_ckpt"]) or should_save_ckpt
             if updated_stats["ckpt_reason"] is not None:
                 ckpt_reason = updated_stats["ckpt_reason"]
+                
+            # Release memory used by language encoder
+            print(f"Torch CUDA memory allocated: {torch.cuda.memory_allocated()/1_000_000:.0f} Mb")
+            del rollout_model.lang_encoder, lang_encoder
+            print(f"Torch CUDA memory allocated: {torch.cuda.memory_allocated()/1_000_000:.0f} Mb\n")
 
         # check if we need to save model MSE
         should_save_mse = False
